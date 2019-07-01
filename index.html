@@ -1,0 +1,83 @@
+<html>
+<head>
+    <title>SignalR-Chat</title>
+    <meta charset="utf-8" />
+    <link href="assets/bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <!-- <link href="Content/Site.css" rel="stylesheet" type="text/css"> -->
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <!-- Chat users list -->
+            <div class="col-xs-4 col-md-2">
+                <div class="panel panel-default">
+                    <div class="panel-heading" id="onlineUsersCount">Online: 0</div>
+                    <div class="panel-body panel-fixed-height">
+                        <ul id="userList"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!--Chat window-->
+            <div class="col-xs-8 col-md-10" id="chatPanel">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Chat:</div>
+                    <div class="panel-body panel-fixed-height">
+                        <ul id="messagesArea"></ul>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="userMessage" placeholder="Write your message">
+                    <span class="input-group-btn">
+                        <a class="btn btn-default" id="btnSendMessage">Enviar</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="assets/jquery/jquery-3.4.1.min.js"></script>
+    <script src="assets/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+    <script src="assets/jquery/jquery.signalR-2.4.1.min.js"></script>
+    <script>
+        $(function () {
+            var username;
+            var connection = $.hubConnection("http://localhost:54052");
+            var chat = connection.createHubProxy('chat');
+
+            chat.on("updateUsers", function(userCount, userList) {
+                $('#onlineUsersCount').text('Online: ' + userCount);
+                $('#userList').empty();
+                userList.forEach(function (username) {
+                    $('#userList').append('<li>' + username + '</li>');
+                });
+            });
+
+            chat.on("broadcastMessage", function(username, message) {
+                $('#messagesArea').append('<li><strong>' + username + '</strong>: ' + message);
+            });
+
+            connection.start()
+                .done(function () {
+                    do {
+                        username = prompt("Ingrese un nombre: ");
+                    } while (username == null || username == "");
+                    
+                    chat.invoke("Connect", username);
+                })
+                .fail(function (a) {
+                    console.log('Sin conexion: ' + a);
+                });
+
+            $('#btnSendMessage').click(function () {
+                var message = $('#userMessage').val();
+                chat.invoke('Send', message);
+                $('#userMessage').val("");
+            });
+
+        });
+    </script>
+</body>
+
+</html>
