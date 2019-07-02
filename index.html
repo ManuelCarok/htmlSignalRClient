@@ -69,6 +69,15 @@
                 .fail(function (a) {
                     console.log('Sin conexion: ' + a);
                 });
+            
+            connection.stateChanged(function (change) {
+              if (change.newState === 2) {
+                  console.log("Desconectado");
+              }
+              else if (change.newState === 1) {
+                  console.log("Conectado");
+              }
+            });
 
             $('#btnSendMessage').click(function () {
                 var message = $('#userMessage').val();
